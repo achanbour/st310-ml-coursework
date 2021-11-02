@@ -1,6 +1,6 @@
 ---
 title: "Logistic regression"
-author: "Joshua Loftus"
+author: "Anastasia Chanbour"
 output: html_document
 ---
 
