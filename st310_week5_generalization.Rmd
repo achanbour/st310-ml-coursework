@@ -1,6 +1,6 @@
 ---
 title: "Generalisation"
-author: "LSE ST310"
+author: "Anastasia Chanbour"
 output: html_document
 ---
 
