@@ -1,6 +1,6 @@
 ---
 title: "Optimization for machine learning"
-author: "Joshua Loftus"
+author: "Anastasia Chanbour"
 output: html_document
 ---
 
