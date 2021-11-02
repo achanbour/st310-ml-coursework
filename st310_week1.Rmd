@@ -1,6 +1,6 @@
 ---
 title: "Week 1 seminar"
-author: "Joshua Loftus"
+author: "Anastasia Chanbour"
 date: "1/22/2021"
 output: html_document
 ---
