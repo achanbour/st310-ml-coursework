@@ -1,0 +1,266 @@
+---
+title: "Week 1 seminar"
+author: "Joshua Loftus"
+date: "1/22/2021"
+output: html_document
+---
+
+**Aim**: In this class we develop the example of visualising the gapminder data presented in lectures.
+
+This lab consists of a series of tasks with blanks for you to complete and run the code.
+
+#  Task 1: Repeating the gapminder analysis
+
+Let's start easy by just repeating some steps but with data from a different year.
+
+Create the `gapminder` scatterplot using data from the year 2002**
+
+##  1.1: Load packages
+
+-  Load the packages: tidyverse, gapminder, broom. (Recall what these packages were needed for in lectures. You can look them up if unsure.)
+
+You will need to install these packages if they are not on your machine.
+Once installed the packages are on your machine for future use (no need to install on each session)
+
+Code: use the function library()
+
+```{r}
+#YOUR CODE HERE
+library("gapminder")
+library("tidyverse")
+```
+
+##  1.2 
+We want a scatterplot with x=gdpPercap, and y=lifeExp
+
+ - call the data object from 2002 gm2002
+ - call the scatterplot gm_scatterplot
+ - display the plot
+ 
+Code: 
+To extract the data for year 2002, use the pipe and filter() as in lectures
+
+-  Use ggplot(data=...,aes()) for the plot
+-  Use geom_point() to display a scatterplot
+
+```{r}
+#YOUR CODE
+#Note: R is case sensitive
+ncol(gapminder) #number of columns
+nrow(gapminder) #number of rows
+names(gapminder) #number of variables & variable names
+head(gapminder, n=1)
+
+summary(gapminder$year) #access the variable "year" in the dataset gapminder
+
+gm2002 <- gapminder %>%
+  filter(year == 2002)
+
+gm_scatterplot <- ggplot(data=gm2002, aes(x=gdpPercap, y=lifeExp)) +
+  geom_point()+
+  labs(title="Scatter plot")+
+  theme_bw()
+
+gm_scatterplot
+
+
+
+```
+
+
+##  1.3: Add lines to the scatterplot showing the linear model and loess model
+
+**1.3.1** First create an lm model to predict lifeExp.
+
+For the lm model:
+ 
+ - Call the lm model object model_lm
+ - apply augment() to the model, and save the object as predictions_lm
+ 
+ Code: 
+ 
+ -  the functions needed are lm() and augment()
+ 
+ -  lm(y~x,data=<data frame name>) where $y$ is the name of the response
+, and $x$ is the name of the predictor
+
+
+```{r}
+#YOUR CODE
+#add slr line
+model_lm <- lm(lifeExp ~ gdpPercap, data = gm2002)
+#summary(model_lm)
+#generate in-sample predictions
+predictions_lm <- broom::augment(model_lm)
+#head(predictions_lm)
+#plot fitted lm model
+gm_scatterplot + geom_line(data = predictions_lm, aes(y=.fitted))
+
+```
+
+## 1.3.2 Next, create a loess model to predict lifeExp
+
+Here we use the loess (locally estimated scatterplot smoothing) model.
+R documentation for loess: https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/loess
+
+Loess is a local regression fits regressions across local neighborhoods of the predictor(s).
+It can be applied using the loess() on a numerical vector to smoothen it and to predict the Y locally (i.e, within the values of Xs). The size of the neighborhood can be controlled using the span argument, which ranges between 0 to 1. It controls the degree of smoothing. So, the greater the value of span, more smooth is the fitted curve.
+
+See Figure 7.9 ISLR p281
+
+Tasks
+
+-  set the argument span=0.75, and call the object model_loess
+-  apply augment() to the model, and save the object as predictions_loess
+
+Code: 
+
+-  the functions needed are loess() and augment().
+-  the arguments in loess() is similar to lm() but we have an additional argument
+span. Span controls the amount of smoothing for the default loess smoother. Smaller numbers produce wigglier lines, larger numbers produce smoother lines. However, this doesn't actually tell me what the span argument is controlling. Setting it to 1 is useless, and setting it to 0.1 provides something that looks good.
+
+
+```{r}
+#YOUR CODE
+model_loess <- loess(lifeExp ~ gdpPercap,
+                     data = gm2002,
+                     span = 0.1)
+
+predictions_loess <- broom::augment(model_loess)
+summary(predictions_loess)
+
+gm_scatterplot + geom_line(data = predictions_lm, aes(y=.fitted), color = "blue", linetype = "dashed") + geom_line(data = predictions_loess, aes(y=.fitted), color = "green")
+
+```
+
+
+```
+
+**1.3.3** Now write the code to add the lines from the the two models to the scatterplot
+
+- add the line of predictions from lm model to the scatterplot gm_scatterplot, and make the line blue and dashed. 
+- add the line of predictions from the loess model to the scatterplot, and make the line green.
+
+Code: Use {geom_line()}[https://www.rdocumentation.org/packages/ggplot2/versions/3.3.3/topics/geom_path]
+
+geom_line(data=<name of object containing predictions>,
+size=<1,2,...>,
+color=<"red","green","blue",...>, 
+linetype=<"dashed","dotted","dotdash"...>,
+aes(y=<name of variable in the data that contains the predictions>))
+
+Hint for aes: What is the name of the variable returned by augment() that contains the predicted values?
+
+```{r}
+#YOUR CODE
+
+
+```
+
+
+
+## Task 2: Predicting on new data
+
+Models are supposed to capture/use structure in the data that corresponds to structure in the real world. And if the real world isn't misbehaving, that structure should be somewhat stable.
+
+For example, suppose the relationship changed dramatically from one time period to another time period. Then it would be less useful/interesting to have a model fit on data at one time period, because the same model might have a poor fit on data from a different time period.
+
+Let's explore this with our `gapminder` models
+
+#### Predictions on different years
+
+What we have done is fit 2 models for 2002. Suppose the interest is in using the models to predict the response. we want to know if this model predicts well the response for other years, say 1997 and 2007. If the relationship between the response and the predictors is stable over time we would expect the predictions across years to be similar. 
+
+**2.1:** Create datasets for the years 1997 and 2007 from gapminder
+
+-  save the data object for 1997 data as gm1997
+-  save the data object for 2007 data as gm2007
+
+```{r}
+#your code here
+```
+
+
+
+
+**2.2:** Using our models in Task 1, predict the response given the new data from 1997 and 2007 and save the residuals.
+
+By definition the residual for the $i$th observation is equal to the value of the $i$th response minus the predicted value for the $i$th observation. [so what does it mean about the prediction if for the $i$th observation the residual is zero?]
+
+-  save the residuals from the lm model for 1997 and call it lm_resid1997. Repeat for 2007 and call the residuals lm_resid2007
+
+-  repeat the above but using the loess model from Task 1. Call the residuals for 1997 and 2007, respectively, loess_resid1997 and loess_resid2007.
+
+In preparation for the next step, note the saved residual objects are 1D arrays.
+
+code: 
+augment(<name of model object>, newdata=<name of data object from which you want predictions>) and pipe this to pull(.resid), which extracts the residuals from the resulting data frame.
+
+
+```{r}
+#YOUR CODE
+```
+
+**2:3:** Get a measure of how good are the predictions from step 2.2.
+
+A popular measure of how good the predictions are from a model is the (estimated) mean squared error, which is the average of the residuals squared.
+
+-  compute the estimated mse for lm and loess models for 1997
+-  repeat using 2007 data. Add the argument na.rm=TRUE in mean()
+
+Can we say one model performs better?
+
+code: similar to following example
+a<-c(1,2,3)
+mean(a^2) 
+
+
+```{r}
+#your code here for mse for 1997 data
+```
+
+```{r}
+#your code here for mse for 2007 data
+```
+
+
+One trade-off we see here: the `loess` function does not have any default way of extrapolating to observations outside the range of the original data (values of `gdpPercap` in 2007 that are larger than the maximum in 2002).
+
+## Conclusion/notes
+
+The more complex, `loess` model performs better than the linear model even when tested on data from 5 years earlier or later.
+
+Sometimes a more complex model really is better!
+
+**Question**: Can we break it? Let's change the `span` parameter in the `loess` function to make it even more complex and see if we keep reaching the same conclusion.
+
+**Answer**: Even after decreasing to `span = 0.1` the more complex model was still better!
+
+**Question**: How can we change this setup so that the linear model isn't always worse?
+
+**Answer**: Try a logarithmic transformation on the `gdpPercap` variable to improve the fit of the linear model first, then maybe the linear model will do better on data from a different year than `loess` with a low `span` value.
+
+```{r}
+#using mutate we create new variable called log_gdpPerCap that is the log10 of gdpPercap that is in the data frame gapminder.
+
+gm2002 <- gapminder %>%
+  filter(year == 2002) %>%
+  mutate(log_gdpPercap = log10(gdpPercap))
+```
+
+```{r}
+gm2007 <- gapminder %>% filter(year == 2007) %>%
+  mutate(log_gdpPercap = log10(gdpPercap))
+gm1997 <- gapminder %>% filter(year == 1997) %>%
+  mutate(log_gdpPercap = log10(gdpPercap))
+```
+
+Now repeat other code changing `gdpPercap` to `log_gdpPercap`.
+
+It seems that:
+
+- More complex models (almost) always have lower MSE *when the errors are computed on the same data as the model fitting function*
+- More complex models can also have lower MSE *when the errors are computed on new data that the model fitting function did not access*
+- But, sometimes simpler models have lower MSE on new data
+
+

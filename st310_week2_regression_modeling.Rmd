@@ -1,0 +1,212 @@
+---
+title: "Seminar notebook"
+author: "Joshua Loftus"
+output: html_document
+---
+
+```{r setup, message = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(gapminder)
+library(broom) #broom package takes the messy output of built-in functions in R, such as lm,#nls, or t.test, and turns them into tidy tibbles.
+theme_set(theme_minimal(base_size = 10))   #theme_set overides default ggplot theme
+library(gapminder)
+library(plotly)
+```
+
+# Linear regression
+
+## Simple linear regression
+
+### Estimation
+
+**Task** 
+1. Filter year=2007 from the gapminder data and call the data frame object gm2007.
+2. Create a regression object called model_lm that regresses lifeEXp on gdpPercap for 2007 data
+3. Output the estimated coefficients, intercept and slope, only
+
+```{r}
+#CODE
+gm2007 <- gapminder %>% filter(year == 2007)
+model_lm <- lm(data = gm2007, lifeExp ~ gdpPercap)
+#tidy(model_lm)['estimate']
+coef(model_lm)
+```
+
+
+### Demo dplyr::summarise function
+
+summarise() or summarize() creates a new data frame.
+
+dplyr = (d)ata + plyr 
+plyr: Tools for Splitting, Applying and Combining Data
+
+- hat_beta1 = `cor(x,y) * sd(y) / sd(x)`
+- hat_beta0 = mean(y) - hat_beta1 * mean(x)
+- Regression line passes through `(mean(x), mean(y))`
+
+
+```{r}
+#output: correlation, sd, mean(x), mean(y), estimated intercept and slope coefficient using formula
+#CODE
+gm2007 %>% 
+  summarize(cor_xy=cor(gdpPercap, lifeExp),
+            sd_x = sd(gdpPercap),
+            sd_y = sd(lifeExp),
+            mean_x = mean(gdpPercap),
+            mean_y = mean(lifeExp),
+            hat_beta1 = cor_xy/sd_x*sd_y,
+            hat_beta0 = mean_y - hat_beta1*mean_x)
+```
+
+### Inference
+
+```{r}
+#Use summary(reg_object) to obtain basic output of regression
+summary(model_lm)
+```
+
+(ISLR eq 3.8) p.66
+
+`se(beta hat) = sigma / sqrt(sum((x - mean(x))^2))`
+
+Estimated by:
+
+`se(beta hat) = sigma hat / sqrt(sum((x - mean(x))^2))`
+
+where (ISLR 3.15) p.69:
+
+`sigma hat = RSE = sqrt( RSS / (n-2) )`
+
+
+```{r}
+#Using augment() to extract residuals, compute the estimated se of the slope parameter by
+#obtaining 1. RSS 2. MSE = (RSS/(n-p)) 3. estimated S.E of hat beta1
+#CODE
+augment(model_lm) %>% 
+  summarize(RSS = sum(.resid^2),
+            MSE = RSS /(n()-2),
+            SE = sqrt(MSE)/sqrt(sum((gdpPercap - mean(gdpPercap))^2)))
+```
+
+### Model diagnostics
+
+```{r}
+#glance: Construct a single row summary "glance" of a model, fit, or other object
+#CODE
+glance(model_lm)
+```
+
+"Portion of variance in outcome **explained** by simple linear regression model"
+
+$$
+R^2 = \text{cor}(x,y)^2
+$$
+
+```{r}
+#compute correlation squared between gdpPercap and lifeExp
+#CODE
+cor(gm2007$gdpPercap, gm2007$lifeExp)^2
+```
+
+$$
+R^2 = 1 - \frac{\text{RSS}}{\text{TSS}}
+$$
+
+
+```{r}
+#using residuals from augment(), obtain values of RSS, TSS, and R2
+#CODE
+augment(model_lm) %>%
+  summarize(RSS = sum(.resid^2),
+            TSS = sum((lifeExp - mean(lifeExp))^2),
+            R2 = 1 - RSS/TSS)
+            
+  
+```
+
+
+### Diagnostic plots
+
+Idea: look for patterns in residuals, which could indicate systematic errors (bias)
+
+Outliers vs influential points: influential points affect the slope of the model line
+
+```{r}
+#Plot residuals vs gdpPercap, using residuals from augment()
+#CODE
+par(mfrow=c(1,3))
+plot(model_lm, which = c(1,2,4)) #plot.lm is plot on a regression generates 6 plots
+```
+There is a pattern in residuals. Suggets that the relationship is non-linear
+
+
+Other diagnostics:
+
+- Checking for (approximate) normality with quantile-quantile plot
+- Checking for influential observations
+
+[Cook's distance](https://en.wikipedia.org/wiki/Cook%27s_distance), `cooksd` in the plots, measures how much the predictions for all other observations change if we leave out one observation
+
+Point with high `cooksd` values 
+
+```{r}
+#diagnostic plots with built-in graphics plot.lm
+#CODE
+```
+
+```{r}
+#GGally extends ggplot2 by adding several functions to reduce the complexity of combining #geoms with transformed data. Some of these functions include a pairwise plot matrix, a #scatterplot plot matrix, 
+#install.packages("GGally")
+library(GGally)
+#Dignostic plots with ggplot. 
+#ggnostic() is a display wrapper to ggduo() that displays full model diagnostics for each given #explanatory variable. By default, ggduo() displays the residuals, leave-one-out model sigma #value, leverage points, and Cook’s distance against each explanatory variable.
+#https://search.r-project.org/CRAN/refmans/GGally/html/ggnostic.html
+
+ggplotly(ggnostic(model_lm))
+
+
+```
+
+
+
+**Question**: with flexible models, are influential observations more or less harmful, and in which ways?
+
+
+
+## Multiple regression
+
+```{r}
+# can use
+# candy <- fivethirtyeight::candy_rankings
+# or gapminder with gdpPercap^2 and/or continent terms, etc
+```
+
+
+### Estimation
+
+```{r}
+
+```
+
+
+### Inference
+
+```{r}
+
+```
+
+Hint: plot confidence intervals with `ggcoef` in `GGally` package
+
+### Diagnostics
+
+```{r}
+
+```
+
+### Problem: high dimensional plots...
+
+e.g. `ggpairs` shows many 2-dimensional projections of the data, but there is no guarantee that these projections together help us understand higher dimensional relationships... including possibly higher dimensional patterns in the residuals
+
+**Question**: What does this mean for diagnostic plots when our regression model is high dimensional (e.g. p > 3 predictors)
+
