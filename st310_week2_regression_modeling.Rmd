@@ -20,7 +20,7 @@ library(plotly)
 
 ### Estimation
 
-**Task** 
+**Task**
 1. Filter year=2007 from the gapminder data and call the data frame object gm2007.
 2. Create a regression object called model_lm that regresses lifeEXp on gdpPercap for 2007 data
 3. Output the estimated coefficients, intercept and slope, only
@@ -38,7 +38,7 @@ coef(model_lm)
 
 summarise() or summarize() creates a new data frame.
 
-dplyr = (d)ata + plyr 
+dplyr = (d)ata + plyr
 plyr: Tools for Splitting, Applying and Combining Data
 
 - hat_beta1 = `cor(x,y) * sd(y) / sd(x)`
@@ -49,7 +49,7 @@ plyr: Tools for Splitting, Applying and Combining Data
 ```{r}
 #output: correlation, sd, mean(x), mean(y), estimated intercept and slope coefficient using formula
 #CODE
-gm2007 %>% 
+gm2007 %>%
   summarize(cor_xy=cor(gdpPercap, lifeExp),
             sd_x = sd(gdpPercap),
             sd_y = sd(lifeExp),
@@ -83,7 +83,7 @@ where (ISLR 3.15) p.69:
 #Using augment() to extract residuals, compute the estimated se of the slope parameter by
 #obtaining 1. RSS 2. MSE = (RSS/(n-p)) 3. estimated S.E of hat beta1
 #CODE
-augment(model_lm) %>% 
+augment(model_lm) %>%
   summarize(RSS = sum(.resid^2),
             MSE = RSS /(n()-2),
             SE = sqrt(MSE)/sqrt(sum((gdpPercap - mean(gdpPercap))^2)))
@@ -121,9 +121,10 @@ augment(model_lm) %>%
   summarize(RSS = sum(.resid^2),
             TSS = sum((lifeExp - mean(lifeExp))^2),
             R2 = 1 - RSS/TSS)
-            
-  
+
+
 ```
+
 
 
 ### Diagnostic plots
@@ -148,65 +149,4 @@ Other diagnostics:
 
 [Cook's distance](https://en.wikipedia.org/wiki/Cook%27s_distance), `cooksd` in the plots, measures how much the predictions for all other observations change if we leave out one observation
 
-Point with high `cooksd` values 
-
-```{r}
-#diagnostic plots with built-in graphics plot.lm
-#CODE
-```
-
-```{r}
-#GGally extends ggplot2 by adding several functions to reduce the complexity of combining #geoms with transformed data. Some of these functions include a pairwise plot matrix, a #scatterplot plot matrix, 
-#install.packages("GGally")
-#library(GGally)
-#Dignostic plots with ggplot. 
-#ggnostic() is a display wrapper to ggduo() that displays full model diagnostics for each given #explanatory variable. By default, ggduo() displays the residuals, leave-one-out model sigma #value, leverage points, and Cook’s distance against each explanatory variable.
-#https://search.r-project.org/CRAN/refmans/GGally/html/ggnostic.html
-
-ggplotly(ggnostic(model_lm))
-
-
-```
-
-
-
-**Question**: with flexible models, are influential observations more or less harmful, and in which ways?
-
-
-
-## Multiple regression
-
-```{r}
-# can use
-# candy <- fivethirtyeight::candy_rankings
-# or gapminder with gdpPercap^2 and/or continent terms, etc
-```
-
-
-### Estimation
-
-```{r}
-
-```
-
-
-### Inference
-
-```{r}
-
-```
-
-Hint: plot confidence intervals with `ggcoef` in `GGally` package
-
-### Diagnostics
-
-```{r}
-
-```
-
-### Problem: high dimensional plots...
-
-e.g. `ggpairs` shows many 2-dimensional projections of the data, but there is no guarantee that these projections together help us understand higher dimensional relationships... including possibly higher dimensional patterns in the residuals
-
-**Question**: What does this mean for diagnostic plots when our regression model is high dimensional (e.g. p > 3 predictors)
-
+Point with high `cooksd` values
