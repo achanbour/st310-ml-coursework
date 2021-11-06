@@ -19,4 +19,8 @@ Topics covered:
 
 * Generalisation and overfitting problems: In Distribution (Overfitting to variance) & Out Of Distribution (Overfitting to bias).
 
+Book reference: ISLR https://www.statlearning.com/
+
+
+
 
