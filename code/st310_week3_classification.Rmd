@@ -1,69 +1,47 @@
 ---
 title: "Logistic regression"
 author: "Anastasia Chanbour"
+date:  "15/10/2021"
 output: html_document
 ---
-
-```{r setup, include=FALSE}
+# Load the required packages
+```{r}
 library(tidyverse)
 library(broom)
 library(modeldata)
 data(attrition)  #package with data
 ```
 
-# Today:
-
-- Part 1 on classification with logistic regression 
-- Part 2 on simulations and thinking about causality
-
+# Aim: Classification with logistic regression
 
 ## Part 1: Categorical outcome data
 
-Look at the data
+Comparing the distribution of a numeric predictor variable between the two outcome classes
 
 ```{r}
-#head(attrition)
-names(attrition)
-#str(attrition)
-```
-
-
-Compare the distribution of a numeric predictor variable between the two outcome classes
-
-```{r}
-#Plot TotalWorkingYears over attribution. 
 ggplot(attrition, aes(x=Attrition, y = TotalWorkingYears))+
   geom_boxplot()
-
 ```
 
 
-Test for difference in means
+Testing for difference in means
 
 ```{r}
-# use t.test()
 t.test(TotalWorkingYears~Attrition, data = attrition)
-
 ```
 
-Check class balance:
+Checking for class balance:
 
 ```{r}
-#CODE
-#Method: using dyplr
 attrition %>% count(Attrition)
-
-#Method: using base R
 table(attrition$Attrition)
-
 ```
 
-Create a balanced dataset with the same number of observations in both classes
+Creating a balanced dataset with the same number of observations in both classes
 
-Why: Classifiers (such as Logistic Regression) tend to ignore small classes while concentrating on classifying the large ones accurately
+Reason: Classifiers (such as Logistic Regression) tend to ignore small classes while concentrating on classifying the large ones accurately
 
 ```{r}
-#What do lines 61-68 do?
 attr_No <- attrition %>%
   filter(Attrition == "No") %>%
   sample_n(size = 237)
@@ -75,14 +53,13 @@ attr <- rbind(attr_No, attr_Yes)
 
 # or
 
-attr <- attrition %>% 
+attr <- attrition %>%
   group_by(Attrition) %>%
   slice_sample(n = 237)
 
 
 # transform outcome to numeric 0-1
-# Question: What do mutate() and select() do?
-nattr <- attr %>% 
+nattr <- attr %>%
   mutate(Y = as.numeric(Attrition) - 1) %>%
   select(Y, TotalWorkingYears)
 ```
@@ -90,11 +67,10 @@ nattr <- attr %>%
 
 ## Classification: linear regression with the linear probability model (LPM)?
 
-Plot linear regression line, change the threshold
+Plotting linear regression line, change the threshold
 
 ```{r}
-#What is the impact of the types of errors when we change the threshold moving it from low to high?
-ggplot(nattr, aes(x = TotalWorkingYears, y = Y)) + 
+ggplot(nattr, aes(x = TotalWorkingYears, y = Y)) +
   geom_point() +
   geom_smooth(method = "lm", se = FALSE) +
   geom_hline(yintercept = .4) # or e.g. mean(nattr$Y)
@@ -126,17 +102,13 @@ For **multiple** regression--when we have more predictors--we can then transform
 ## Logistic regression
 
 ```{r}
-#(1) Fit logistic regression on binary variable attrition (Y) on TotalWorkingYears and call the #regression object model_glm. 
-#(2) Display summary output
 model_glm <- glm(Y~TotalWorkingYears,data = nattr, family = binomial)
 model_glm
-
 ```
-
+# Compare the fit of the glm to LPM
 ```{r}
-#Compare the fit of the glm to LPM
 augment(model_glm, type.predict = "response") %>%
-  ggplot(aes(TotalWorkingYears, Y)) + 
+  ggplot(aes(TotalWorkingYears, Y)) +
   geom_point() +
   geom_line(aes(y = .fitted))
 ```
@@ -150,171 +122,3 @@ some function (logit) of the mean of Y is equal to a linear function in X
 $$
 P(Y = 1|X) = \frac{e^{\beta_0 + \beta_1 X}}{1 + e^{\beta_0 + \beta_1 X}}
 $$
-
-### Interpreting coefficients
-
-
-```{r}
-#Interpret the exp(.) of the coefficients
-```
-
-### Inference
-
-```{r}
-exp(confint(model_glm))
-```
-
-Model evaluation measures
-
-```{r}
-glance(model_glm)
-#predict(model_glm, type="response")
-```
-
-Diagnostic plots: can do this but less common, harder to interpret "deviance residuals"
-
-(Warning: residual plots almost always show "patterns", can't be interpreted the same way as for linear regression)
-
-## Balance and (re)calibration
-
-What portion of data are classified using a given cutoff for the predicted probability?
-
-```{r}
-mean(predict(model_glm, type = "response") > 0.5)
-```
-
-Try different cutoffs
-
-```{r}
-
-c(.3, .4, .5, .6, .7) %>%
-  map_dbl(function(cutoff) mean(predict(model_glm, type = "response") > cutoff))
-
-```
-
-Tabulate a confusion matrix using dplyr functions
-
-```{r}
-#CODE
-conf_mat <- function(fitted_glm, cutoff = 0.5){
-  augment(fitted_glm, type.predict = "response") %>%
-    mutate(Yhat = as.numeric(.fitted > cutoff)) %>% 
-    count(Y,Yhat)
-}
-```
-
-```{r}
-conf_mat(model_glm, 0.4)
-```
-
-Try another cutoff
-
-```{r}
-conf_mat(model_glm, .5)
-```
-
-
-## Multiple regression model
-
-(Complete outside of class time unless time permits)
-
-Pick a few predictors and repeat the above
-
-```{r}
-#CODE
-```
-
-
-### Modeling assumption
-
-$$
-\text{logit}[ P(Y = 1|X)] = X \beta
-$$
-(Matrix multiplication, has an intercept if $X$ has a constant column)
-
-
-## Part 2: Simulation
-
-Write a function like `y = f(x) + noise` to generate data (with sample size as an input to the function)
-
-Start with a linear function and Gaussian noise
-
-```{r}
-# (1) Write a function with input x and outputs 1-2*x. Call this function f.
-# (2) Function my_dgp that takes argument n (size), and returns a dataframe containing
-# x which is a sample from U(0,1) of size n, and y where y = f(x) + e and e~N(0,1) draws
-
-f <- function(x) #complete this line
-my_dgp <- function(n) {
-  # generate x
-  # generate y
-  # return data.frame
-}
-
-```
-
-Simulate one dataset with a sample size of 20, fit a linear regression model, and extract the slope estimate
-
-```{r}
-#CODE
-
-```
-
-Repeat this 100 times using `replicate()`, plot a histogram of the coefficient estimates, add a `geom_vline` at the true coefficient value. Increase the sample size and try again
-
-```{r}
-replicate(100, coef(lm(y ~ x, data = my_dgp(n = 20)))[2]) %>%
-  qplot() + geom_vline(xintercept = -2)
-```
-
-
-### Complexify the above
-
-(Complete outside of class time unless time permits)
-
-Now try making `f` a function of two variables, where `x1` and `x2` are both (possibly noisey) functions of a hidden variable `u`
-
-What are the true coefficients? How do we interpret them? What happens if we regress on only `x1` or only `x2`? What would be the change in outcome if we could intervene on `x1` (erasing the influence of `u` on `x1` but keeping it for `x2`)? What if we could intervene on `u`?
-
-```{r}
-#CODE
-# e.g. beta1 <- -1
-# e.g. beta2 <- -2
-# e.g.  f <- function(x1, x2) 1 + beta1 * x1 + beta2 * x2
-my_dgp <- function(n) {
-  # generate u
-  # generate x1 and x2
-  # generate y
-  # return data.frame with x1, x2, y but not u
-}
-```
-
-```{r}
-replicate(100, coef(lm(y ~ x1 + x2, data = my_dgp(n = 1000)))[2]) %>%
-  qplot() + geom_vline(xintercept = beta1)
-```
-
-
-```{r}
-replicate(100, coef(lm(y ~ x1, data = my_dgp(n = 1000)))[2]) %>%
-  qplot() + geom_vline(xintercept = beta1)
-```
-
-If we regress on only one at a time the estimates can be biased (omitted variable bias)
-
-If we could intervene on `x1` directly then `beta1` (the true value, not the estimate) would tell us the causal effect on the outcome
-
-If we could intervene on `u` then the total effect on `y` would involve both `beta1` and `beta2`, as well as the coefficients of `u` on both `x1` and `x2`
-
-e.g. increasing `u` by 1 would make `x1` increase by 3 and `x2` decrease by 7, hence `y` would change by `3*beta - 7*beta2`
-
-### Extra practice
-
-(Complete outside of class time unless time permits)
-
-Repeat the previous simulations but generate a binary outcome and use logistic regression to estimate coefficients
-
-```{r}
-# y <- rbinom(n, 1, exp(f(x))/(1+exp(f(x))))
-```
-

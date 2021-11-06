@@ -1,11 +1,12 @@
 ---
 title: "Seminar notebook"
 author: "Anastasia Chanbour"
+date: "08/10/2021"
 output: html_document
 ---
+# Loading the required packages
 
-```{r setup, message = FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r}
 library(tidyverse)
 library(gapminder)
 library(broom) #broom package takes the messy output of built-in functions in R, such as lm,#nls, or t.test, and turns them into tidy tables
@@ -26,20 +27,16 @@ library(plotly)
 3. Output the estimated coefficients, intercept and slope, only
 
 ```{r}
-#CODE
 gm2007 <- gapminder %>% filter(year == 2007)
 model_lm <- lm(data = gm2007, lifeExp ~ gdpPercap)
-#tidy(model_lm)['estimate']
 coef(model_lm)
 ```
 
 
 ### Demo dplyr::summarise function
 
-summarise() or summarize() creates a new data frame.
+Summarise function displays the coefficient estimates in the regression model
 
-dplyr = (d)ata + plyr
-plyr: Tools for Splitting, Applying and Combining Data
 
 - hat_beta1 = `cor(x,y) * sd(y) / sd(x)`
 - hat_beta0 = mean(y) - hat_beta1 * mean(x)
@@ -48,7 +45,6 @@ plyr: Tools for Splitting, Applying and Combining Data
 
 ```{r}
 #output: correlation, sd, mean(x), mean(y), estimated intercept and slope coefficient using formula
-#CODE
 gm2007 %>%
   summarize(cor_xy=cor(gdpPercap, lifeExp),
             sd_x = sd(gdpPercap),
@@ -62,7 +58,7 @@ gm2007 %>%
 ### Inference
 
 ```{r}
-#Use summary(reg_object) to obtain basic output of regression
+#Use summary() to obtain basic output of regression
 summary(model_lm)
 ```
 
@@ -82,7 +78,6 @@ where (ISLR 3.15) p.69:
 ```{r}
 #Using augment() to extract residuals, compute the estimated se of the slope parameter by
 #obtaining 1. RSS 2. MSE = (RSS/(n-p)) 3. estimated S.E of hat beta1
-#CODE
 augment(model_lm) %>%
   summarize(RSS = sum(.resid^2),
             MSE = RSS /(n()-2),
