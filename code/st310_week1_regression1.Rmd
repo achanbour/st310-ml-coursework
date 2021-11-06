@@ -58,6 +58,7 @@ summary(predictions_loess)
 
 Now all three models together
 ```{r}
-
-gm_scatterplot + geom_line(data = predictions_lm, aes(y=.fitted), color = "blue", linetype = "dashed") + geom_line(data = predictions_loess, aes(y=.fitted), color = "green")
+gm_scatterplot + geom_line(data = predictions_lm,
+aes(y=.fitted), color = "blue", linetype = "dashed") +
+geom_line(data = predictions_loess, aes(y=.fitted), color = "green")
 ```
