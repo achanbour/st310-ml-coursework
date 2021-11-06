@@ -8,7 +8,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(gapminder)
-library(broom) #broom package takes the messy output of built-in functions in R, such as lm,#nls, or t.test, and turns them into tidy tibbles.
+library(broom) #broom package takes the messy output of built-in functions in R, such as lm,#nls, or t.test, and turns them into tidy tables
 theme_set(theme_minimal(base_size = 10))   #theme_set overides default ggplot theme
 library(gapminder)
 library(plotly)
@@ -158,7 +158,7 @@ Point with high `cooksd` values
 ```{r}
 #GGally extends ggplot2 by adding several functions to reduce the complexity of combining #geoms with transformed data. Some of these functions include a pairwise plot matrix, a #scatterplot plot matrix, 
 #install.packages("GGally")
-library(GGally)
+#library(GGally)
 #Dignostic plots with ggplot. 
 #ggnostic() is a display wrapper to ggduo() that displays full model diagnostics for each given #explanatory variable. By default, ggduo() displays the residuals, leave-one-out model sigma #value, leverage points, and Cook’s distance against each explanatory variable.
 #https://search.r-project.org/CRAN/refmans/GGally/html/ggnostic.html
