@@ -1,0 +1,175 @@
+---
+title: "Validation experiments"
+author: "ST310 Week 7"
+output: html_document
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse) 
+library(broom)     
+library(modelr)    
+library(glmnet)    
+theme_set(theme_minimal(base_size = 20))
+```
+
+## Choose one of these datasets
+
+```{r}
+library(modeldata)
+data("attrition")
+# in console: View(attrition)
+dim(attrition) # observations, variables
+```
+
+```{r}
+library(AppliedPredictiveModeling)
+data("permeability")
+head(permeability) # numeric outcome
+length(permeability) # n
+dim(fingerprints) # n by p
+```
+
+```{r}
+library(caret)
+data("cox2")
+head(cox2Class) # binary outcome
+length(cox2Class) # n
+dim(cox2Descr) # n by p
+```
+
+## Split data into training/test sets
+
+- Use the `sample()` and `setdiff()` functions to split the data into two random subsets
+
+(Why random subsets instead of 1,...k, and k+1,...n?)
+
+```{r}
+a <- c(1,2,3,4,5)
+b <- c(3,4)
+setdiff(b,a)
+```
+
+## Regularized regression models
+
+- Fit models using `glmnet` on the **training data**
+
+- Plot **test error** as a function of `lambda`
+
+- Plot the fitted coefficients as a function of `lambda`
+
+- For lasso and elastic net, examine `coef()` at the value of `lambda` which minimizes test error
+
+### Ridge regression
+
+```{r}
+
+```
+
+### Lasso regression
+
+```{r}
+
+```
+
+
+### Elastic net regression
+
+```{r}
+
+```
+
+#### Choose some arbitrary value of `lambda` and check the `coef()` of the resulting models, compare the coefficient estimates between lasso and ridge (hint: check `?coef.glmnet`)
+
+```{r}
+
+```
+
+
+#### At the same value of `lambda` above, calculate the accuracy of prediction on both training and test data (use mean-squared error for numeric outcome and misclassification rate for binary, use the option `predict(..., type = "class")` for binary outcome)
+
+Training accuracy for ridge
+```{r}
+
+```
+
+
+Test accuracy for ridge
+```{r}
+
+```
+
+Training accuracy for lasso
+```{r}
+
+```
+
+Test accuracy for lasso
+```{r}
+
+```
+
+#### Experiment with changing the value of `lambda` in the above code
+
+#### Plot the fitted coefficients as a function of `lambda`
+
+Hint: just `plot()` the model object, or build the plot manually using `tidy` from the `broom` package
+```{r}
+
+```
+
+(Does `glmnet` penalize the intercept term by default?)
+
+#### Plot accuracy on training and test data as a function of `lambda`
+
+Calculating error
+```{r}
+
+```
+
+#### Repeat for lasso
+```{r}
+
+```
+
+#### What do you notice about these plots? Similarities and differences?
+
+- Test error is almost always higher than training error
+
+#### For lasso, examine `coef()` at the value of `lambda` which minimizes test error
+
+You can roughly guess the value of `lambda` by looking at the plot
+```{r}
+
+```
+
+
+What is the sparsity (number/proportion of nonzero coefficients)?
+```{r}
+
+```
+
+
+## Cross-validation
+
+#### Use the `cv.glmnet` function to iterate the above process over several train/test splits and automatically find the value of `lambda` minimizing test accuracy (see `?cv.glmnet`)
+
+Do this for lasso and/or ridge, time permitting
+```{r}
+
+```
+
+#### Compute the test error accuracy at these two values
+
+Test accuracy for lasso
+```{r}
+
+```
+
+## Reflections
+
+#### Think back on all the results you've seen and take notes here
+
+#### Can you think of any questions?
